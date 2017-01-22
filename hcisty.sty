@@ -30,7 +30,7 @@
               bookmarksopen=true,%
               bookmarksnumbered=true,%
               pdfauthor={\autor},%
-              pdftitle={\arbeitstitel},% 
+              pdftitle={\arbeitstitel},%
               pdfsubject={\arbeitstitel},%
               pdfkeywords={\arbeitstitel},%
              ]{hyperref}       % clickabe references
@@ -97,8 +97,8 @@
 \localedef{fr}{frenchb}
 	\pagenumbering{roman} % titlepage does not get a number - that's odd, but good.
 
-	\ifpdf\pdfbookmark[1]{Title}{label:title}\fi              
-	
+	\ifpdf\pdfbookmark[1]{Title}{label:title}\fi
+
 	% do not use titlepage environment, because it does not increase page counter.
 
 \thispagestyle{empty}%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,7 +111,7 @@
 \begin{figure}[h!] %  figure placement: here, top, bottom, or page
 	\hspace{-2.32cm}
 	\vspace{-2cm}
-     \includegraphics[width=9.22cm]{images/up-uhh-logo-u-2010-u-png.png} 
+     \includegraphics[width=9.22cm]{images/up-uhh-logo-u-2010-u-png.png}
 \end{figure}
 	\vspace{4cm}
 
@@ -163,7 +163,7 @@ Hamburg, \today
 	\ifthenelse{\equal{#1}{1}}
 	{\newpage\ifpdf\pdfbookmark[1]{Abstract}{label:abst}\fi \input{abstract.tex}}
 	{}
-	
+
 	\ifthenelse{\equal{#2}{1}}
 	{\newpage\ifpdf\pdfbookmark[1]{Zusammenfassung}{label:abstGER}\fi \input{abstractGER.tex}}
 	{}
@@ -178,8 +178,8 @@ Hamburg, \today
 	{\doublespacing
 	\newpage\pagenumbering{arabic}
 	}
-	
-	
+
+
 }
 \headsep.5cm
 
