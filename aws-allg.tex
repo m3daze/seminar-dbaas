@@ -26,7 +26,7 @@ AWS ist eine öffentliche Cloud (weitere Cloudtypen vgl. \cite{wittig:awsinactio
 
 Amazon dominiert den Markt im Bereich SaaS deutlich (45 Prozent Marktanteil), was sich auch in den Umsatzzahlen zeigt. Im dritten Quartal 2016 konnte AWS ein Umsatzplus von 55 Prozent auf 3,2 Milliaren US-Dollar für sich verbuchen. Das macht mittlerweile etwa 10 Prozent des Gesamtumsatzes von Amazon aus. \cite{t3n:brien}
 
-Die, über AWS, bereitgestellten Dienste können grob in nachfolgende Gruppen unterteilt werden. Dabei beschränkt sich die Liste auf die wesentlichen der aktuell über 50 verfügbaren Dienste \cite{sendcheckit:plain}.
+Die, über AWS, bereitgestellten Dienste können grob in nachfolgende Gruppen unterteilt werden. Dabei beschränkt sich die Liste auf die wesentlichen der aktuell 70 verfügbaren Dienste \cite{sendcheckit:plain}, \cite{aws:insider}.
 
 \begin{itemize}
   \item Berechnungs-Dienste
@@ -51,7 +51,9 @@ Funktion der Anwendungsservices benötigt wird, sowie die benötigten Ressourcen
 welche über eine Webanwendung bereitgestellt und genutzt werden. Mit seinem Angebot
 zählt AWS zu den bedeutendsten internationalen Angeboten im Cloud Computing.
 
+
 \section{Regionen und Availability Zones}
+\label{sec:regions}
 AWS verfügt derzeit über 42 Availability Zones (Verfügbarkeitszonen) in 16 geografischen Regionen weltweit verteilt. Verschiedene Dienste, darunter EC2 und S3, sind in Regionen eingeordnet.
 
 \begin{figure}[!ht]
@@ -60,7 +62,7 @@ AWS verfügt derzeit über 42 Availability Zones (Verfügbarkeitszonen) in 16 ge
   \caption{weltweite Infrastruktur (orange: Region mit x AZs, weiß/grün: geplante Region) \cite{aws:regions}}
 \end{figure}
 
-Eine Region entspricht einem physischen Ort auf der Welt, welcher mehrere Availability Zones (AZs) beherbergen kann. Bei einer AZ handelt es sich um ein oder mehrere unabhängige Rechenzentren, wobei jedes eine redundante Energieversorung, Netzwerk und Konnektivität besitzt (siehe \ref{figure:azs-regions}).
+Eine Region entspricht einem physischen Ort auf der Welt, welcher mehrere Availability Zones (AZs) beherbergen kann. Bei einer AZ handelt es sich um ein oder mehrere unabhängige Rechenzentren, wobei jedes eine redundante Energieversorung, Netzwerk und Konnektivität besitzt.
 
 \begin{figure}[!ht]
   \centering
@@ -76,8 +78,45 @@ Die weltweit verteilten Datenzentren sind gerade für international agierende Un
 Aktuell sind fünf weitere Availability Zones und zwei weitere Regionen geplant.
 \\ \cite{computerwoche:reder}, \cite{aws:regions}, \cite{aws:azs}
 
+
 \section{Vorteile}
+
+Warum ein Einsatz der Amazon Web Services für Unternehmen jeder Größe sinnvoll sein kann, zeigen die Vorteile:
+\begin{enumerate}
+  \item Kostenersparnis
+  \\ An oberster Stelle der Vorteile eines Einsatzes von IT-Ressourcen in der Cloud gegenüber einem klassischen Rechenzentrum stehen die Kosten. Statt einer Aufstellung der IT-Ressourcen für die nächsten Jahre, können Ressourcen bei AWS nach Bedarf beansprucht werden. Ist die Zugriffsrate auf die Webseite gerade sehr hoch, können in wenigen Minuten weitere Server bereitgestellt werden, um die Gesamtlast aufzuteilen. Bezahlt wird dabei nach dem "`Pay-per-use"'-Prinzip. Es werden nur Kosten für Ressourcen erhoben, die auch tatsächlich verwendet wurden.
+  \item Hohe Innovations-Geschwindigkeit
+  \\ Im Jahr 2015 hat Amazon 722 neue Services und Features umgesetzt. 40 Prozent mehr als im Jahr zuvor. Wöchentlich werden neue Features und Verbesserungen veröffentlicht. Möglich wird das durch viele kleine Teams, die unabhängig voneinander arbeiten. Dabei stehen die Umsetzung der Wünsche der mittlerweile über eine Millionen Kunden im Vordergrund.
+  \item Weltweite Infrastruktur
+  \\ AWS Nutzer können auf ein Netzwerk weltweit verteilter Datenzentren zurückgreifen. Siehe Sektion \ref{sec:regions}
+  \item Arbeitserleichterung
+  \\ Auf Wunsch übernimmt AWS mit seinem enormen Dienstangebot notwendige Arbeiten der Nutzer, die sie sonst in Eigenregie erledigen bzw. verwalten müssten. Zum Beispiel Load Balancing zwischen den Servern oder das Aufsetzen eines E-Mail-Service.
+  \item Automatisierung
+  \\ Viele Dinge, die einen gewissen manuellen Aufwand und ab einer gewissen Komplexität auch eine kognitive Herausforderung bedeuten, können über Skripte automatisiert werden. Via Code können Instanzen aufgesetzt oder Container und Datenbanken bereitgestellt werden. Um Abhängigkeiten muss sich der Anwender dabei nicht sorgen, denn das übernimmt der Computer ganz automatisch. Die Infrastruktur kann beliebig flexibel definiert werden ohne dass manuelle Einstellungen auf der AWS Webseite getätigt werden müssen. Und das Beste daran ist, dass diese Skripte über ein Versionierungs-Tool versioniert werden können und im Fall eines Komplettabsturzes des Systems selbiges in sehr kurzer Zeit neu aufgesetzt werden kann. {\color{red}Vergleich Infrastructure as Code}
+  \item Skalierbarkeit
+  \\ Neben den Kosten ist Skalierbarkeit wohl das stärkste Argument für eine IT-Infrastruktur in der Cloud. Im Gegensatz zur "`klassischen"' IT, bei der weit in die Zukunft geplant werden und zukünftige Zugriffszahlen abgeschätzt werden mussten, können bei AWS Ressourcen innerhalb von Minuten hinzugeschaltet werden. Sollte der Ansturm vorbei sein und Ressourcen nicht mehr benötigt werden, können diese ebenso schnell wieder abgeschaltet werden, Das ist agil, umweltfreundlich und spart auch noch Geld. Nicht nur zum Auffangen schwankender Zugriffszahlen, auch für das schnelle Bereitstellen von Testsystemen stellt eine hohe Skalierbarkeit der IT-Ressourcen einen großen (Geschwindigkeits-)Vorteil dar.
+  \item Ausfallsicherheit
+  \\ Die meisten angebotenen Dienste implizieren bereits eine Ausfallsicherheit, so dass sich der Anwender um dieses Problem auch nicht mehr kümmern muss.
+  \item Schnelle Anpassungsfähigkeit
+  \\ Durch die bereits erwähnte hohe Skalierbarkeit ist auch eine flinke Anpassung an sich ändernde Anforderungen z.B. durch den sich schnell wandelnden Markt gegeben. Entwicklungszyklen können deutluch kürzer ausfallen, da Testsysteme schneller bereitgestellt und Tests schneller durchgeführt werden können.
+  \item Die Menge macht's
+  \\ Je mehr Kunden AWS nutzen, desto günstiger werden die Dienste für den Einzelnen. Denn um die stetig wachsende Nutzerzahl mit gleichbleibendem Service bedienen zu können, müssen die unterliegenden Prozesse so optimal wie möglich sein.
+  \begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/price-reduction.jpg}
+    \caption{Preis-Reduktions-Philosophy \cite{aws:insider}}
+  \end{figure}
+  \item Professionalität
+  \\ AWS setzt verschiedene Standards ein, um z.B. Zahlungssicherheit und Datensicherheit zu gewährleisten. Für weitere Informationen zu eingesetzten Standards siehe Kapitel 1.3.9 \cite{wittig:awsinaction})
+\end{enumerate} \cite{aws:insider}, \cite{wittig:awsinaction}, \cite{vliet:programmingec2}
+
+
 \section{Kosten}
+Die Kosten für AWS sind abhängig von der Nutzung ("`pay-per-use"'-Prinzip). Zum Beispiel wie viel Speicherplatz verbraucht wird oder wie viel die Laufzeit eines virtuellen Servers beträgt. Dieses Konzept ist gerade für kleine Unternehmen mit einem geringen Budget interessant, da sie weitaus bessere Möglichkeiten haben von Beginn an fehlertolerante Systeme aufzusetzen. Der Betrieb eines großen Servers kostet am Monatsende ebenso viel wie der Betrieb zweier kleinerer Server mit der selben Kapazität wie der große Server. Jedoch bietet die Infrastruktur mit zwei Servern die Möglichkeit redundanter Datenhaltung.
+\\Für zukünftig geplante Installationen bietet AWS auf seiner Seite einen Preisrechner \cite{aws:calc}.
+\\ Seit 2010 bietet Amazon die Möglichkeit, in begrenztem Maße beliebte Dienste und Rechenleistung (750 Stunden) für 12 Monate kostenlos auszuprobieren. Dieses Programm nennt sich "`Free Usage Tier"'. \cite{wikipedia:aws}, \cite{wittig:awsinaction}
+
 \section{Sicherheit}
+Die Sicherheit der eigenen gehosteten Daten ist einer der wichtigsten Punkte, die Amazon gewährleisten muss. Um deutschen Datenschutz- und Datensicherheitsstandards gerecht werden zu können, wurden zwei Datenzentren in Frankfurt am Main eröffnet. Die Daten werden auf Wunsch der Kunden nicht auf amerikanischen Servern gespiegelt und es steht Entwicklern ausdrücklich frei, die hinterlegten Daten zu verschlüsseln. Allerdings war in der Vergangenheit auch immer wieder von Sicherheitslücken die Rede und auch die Auftragsvergabe einer public cloud der CIA an Amazon wurde hinsichtlich des Datenschutzes kritisch beurteilt \cite{computerwoche:sicherheit}, \cite{sueddt:cia}.
 
 % keep an blank line above
