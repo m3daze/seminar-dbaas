@@ -11,9 +11,52 @@ Nachfolgend möchte ich anhand eines Beispiels aus dem Energiemarkt einige Diens
 
 TODO Schaubild
 
-\section{Virtuelle Server}
+\section{Virtuelle Server mit Elastic Compute Cloud}
+Jede Anwendung im Web benötigt einen Server, auf dem sie ausgeführt werden kann. Der Webservice Elastic Compute Cloud (EC2) bietet virtuelle Server und damit Rechenleistung in der Cloud, welche je nach Bedarf anpassbar sind. \cite{aws:ec2}
+Der Entwickler hat die Möglichkeit, Instanzen von Servern innerhalb weniger Minuten aufzusetzen. Dabei kann er wählen, auf welchem Betriebssystem die Instanz basieren (Windows oder Linux) und welche Ressourcenkonfiguration die bereitgestellte Instanz haben soll. \cite{aws:ec2} \\
 
-\cite{aws:general}
+Eine Instanz wird aus einem Amazon Machine Image (AMI) erzeugt, welches das Betriebssystem und die darauf installierte Software vorgibt. Amazon bietet verschiedene vorkonfigurierte Images basierend auf 64-bit Windows oder verschiedenen 64-bit UNIX-Derivaten. Dem Nutzer stehen jedoch auch Images von Drittanbietern wie IBM oder Oracle zur Verfügung. Darüberhinaus besteht die Möglichkeit, sein eigenes Image zu entwickeln. Einzige Bedingung ist, dass es auf XEN Hypervisor\footnote{https://www.xenproject.org/} ausgeführt werden kann. \cite{baun:cloudcomp}, \cite{vliet:resilience} \\
+
+Die Ressourcenkonfiguration kann sich aufgrund der Leistungsfähigkeit des Prozessors und der Arbeitsspeicher- und Plattengröße unterscheiden. Die Instanzgrößen variieren von einer kleinen Instanz mit 1,7GB Arbeitsspeicher und 1 EC2 Recheneinheit bis hin zu einer High-CPU Extra Large Instanz mit 7GB Arbeitsspeicher und 20 EC2 Recheneinheiten. \cite{vliet:resilience} \\
+
+Darüberhinaus kann der Nutzer entscheiden, innerhalb welcher Availability Zone die Instanz bereitgestellt wird und ob die Instanzen zusätzlich mit Speicherplatz versehen werden sollen. Dabei hat er die Wahl zwischen zwei Varianten.
+\begin{enumerate}
+  \item S3-gesichert
+  \\ Diese Instanztypen können nur neugestartet oder gelöscht werden, da sie einem flüchtigen Speicher entsprechen. Das root device ist Teil der Instanz selbst.
+  \item EBS-gesichert
+  \\ Dieser Typ wird bevorzugt ausgewählt, da Instanzen auch gestoppt und gestartet werden können. Dies wird möglich, da sich die root/boot disk auf einem separaten Elastic Block Store Volume (EBS) befindet, welches unabhängig der Instanz besteht.
+\end{enumerate}
+\cite{vliet:resilience}, \cite{aws:ec2} \\
+
+Jede Instanz gehört zu einer oder mehreren Security Groups, um sie gegenüber der Außenwelt abzuschirmen. Angesprochen werden die Instanzen über freigegebene Ports oder IP-Masken.
+\\ Weiterhin erhalten Instanzen eine öffentliche IP, die sich jedoch mit jeder Bereitstellung der Instanz (z.B. Neustart) ändert. Daher bietet Amazon die Möglichkeit, die öffentliche IPv4-Adresse\footnote{IPv6-Adressen werden derzeit nicht unterstützt} durch eine Elastic IP Adresse auszutauschen. Elastic IP bietet den Vorteil, dass sie konstant bestehen bleibt. Sollte eine Instanz ausfallen, kann die Elastic IP Adresse sehr schnell einer gesunden Instanz zugewiesen werden.
+\cite{vliet:resilience}, \cite{aws:eip} \\
+
+In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert), wobei jede zwei identische Services innerhalb eines Clusters enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Jede Instanz liegt dabei in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet.
+\\Da unsere Services innerhalb von Docker-Containern laufen, nutzen wir den von Amazon angebotenen EC2-Container Service (ECS). Dieser Dienst wurde speziell für die Unterstützung von Docker-Containern auf EC2-Instanzen entwickelt und erlaubt neben dem Betrieb auch die Verwaltung der Anwendungen auf einem verwalteten EC2-Instanz-Cluster. Der Betrieb einer eigenen Cluster-Managementinfrastruktur entfällt. Funktionen wie Sicherheitsgruppen, Elastic Load Balancing, EBS-Volumes und IAM-Rollen stehen daneben ebenfalls zur Verfügung \cite{aws:ecs}.
+Beide Instanzen laufen innerhalb einer Security Group, welche wiederum in einer Auto-Scaling Group liegt. Letztere ermöglicht eine elastische Instanzgruppe, deren bereitgestellte Ressourcen sich je nach Bedarf anpassen. Das Auto-Scaling basiert dabei auf CloudWatch-Metriken wie z.B. CPU-Auslastung. Beispielsweise könnte eine Metrik besagen, dass zwei neue Instanzen gestartet werden sollen, wenn die CPU Auslastung für 5 Minuten bei 60\% oder höher liegt. Es ist jedoch auch denkbar, dass die Ressourcenanpassung der Gruppe auf Amazons verteilten Queue-System SQS basiert. Dann würden sich die Ressourcen nach der Anzahl der Items in der Queue richten. \cite{vliet:resilience} \\
+
+TODO Wie funktioniert scaling bei uns?
+
+\\
+
+TODO Target Group mit einbringen um später im ALB Bezug auf inhaltsbasiertes Routing zu nehmen
+
+\\
+Der gesamten Gruppe vorgesetzt ist ein Application Load Balancer (ALB). Eine von zwei Lastenverteilungsoptionen\footnote{neben Classic Load Balancer; \\vgl. Funktionen https://aws.amazon.com/de/elasticloadbalancing/classicloadbalancer/faqs/} des Services Elastic Load Balancing.
+Der Elastic Load Balancer (ELB) sitzt vor einer Gruppe von EC2-Instanzen und kann jede Art von TCP Traffic verteilen. Bei der Kommunikation mit den Instanzen nutzt der ELB HTTP und wandelt ggf. vorher eingegangenes HTTPS in HTTP um. Dieses Vorgehen reduziert die Belastung der Instanzen und erhöht damit die Fehlertoleranz. Bei der Verteilung des Traffics achtet der ELB auf eine gleichmäßige Verteilung auf alle Availability Zonen und in jeder AZ auf die gleichmäßige Aufteilung auf die vorhandenen Instanzen. Dies eröht die Sicherheit und reduziert die Komplexität der Infrastruktur.
+\\ Wird der ELB zusammen mit einer Auto-Scaling Group betrieben, kann dieser je nach Bedarf automatisch Instanzen registrieren und bei Nicht-Gebrauch auch wieder abmelden. Eine manuelle Zuordnung der IPs zu den jeweiligen Instanzen ist damit nicht mehr nötig. Bei der Abmeldung einer bestehenden Instanz und nachfolgender Neu-Registrierung einer neuen Instanz kann es unter Umständen kurzzeitig dazu kommen, dass der Dienst nicht zur Verfügung steht. Dieses Problem ist bekannt und entsteht dadurch, dass die alte Instanz erst beendet wird, ehe die neue Instanz hochgefahren werden kann.
+Dem ELB kann ein Hostname zugeordnet werden, worüber dieser direkt angesprochen werden kann.
+\cite{vliet:resilience}, \cite{aws:elb} \\
+
+Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der eingehende Traffic auf erweiterte Anwendungsinformationen, die die Inhalte der Anfrage enthalten. Damit eignet sich dieser Typ besonders für Anwendungen mit der Notwendigkeit erweiterter Routing-Funktionen, Micro-Services und Container-basierten Architekturen. Ein ALB ermöglicht die Lastenverteilung auf mehrere Ports einer EC2-Instanz, aber auch die Umleitung auf mehrere Services. Letzteres wird durch inhaltsbasiertes Routing ermöglicht, welches Anfragen basierend auf ihrem Inhalt an den entsprechenden Service weiterleitet.\footnote{weitere Funktionen des ALBs können \cite{aws:alb} entnommen werden}\\
+
+TODO BEispielbild inhaltsbasiertes ROuting, wenn meine Annahme stimmt
+
+\cite{aws:elb}, \cite{aws:alb}
+
+
+Instanzen werden über terraform aufgesetzt. andere möglichkeiten benennen, beispielcode zeigen.
 
 \section{Das Zusammenspiel der Dienste}
 \label{sec:spiel}
