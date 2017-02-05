@@ -32,41 +32,90 @@ Jede Instanz gehört zu einer oder mehreren Security Groups, um sie gegenüber d
 \\ Weiterhin erhalten Instanzen eine öffentliche IP, die sich jedoch mit jeder Bereitstellung der Instanz (z.B. Neustart) ändert. Daher bietet Amazon die Möglichkeit, die öffentliche IPv4-Adresse\footnote{IPv6-Adressen werden derzeit nicht unterstützt} durch eine Elastic IP Adresse auszutauschen. Elastic IP bietet den Vorteil, dass sie konstant bestehen bleibt. Sollte eine Instanz ausfallen, kann die Elastic IP Adresse sehr schnell einer gesunden Instanz zugewiesen werden.
 \cite{vliet:resilience}, \cite{aws:eip} \\
 
-In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert), wobei jede zwei identische Services innerhalb eines Clusters enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Jede Instanz liegt dabei in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet.
+In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert), wobei jede zwei identische Services innerhalb eines Clusters enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Jede Instanz liegt dabei in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet. \\
+Aufgesetzt werden die Instanzen über die AWS API anhand von TerraForm\footnote{https://www.terraform.io/intro/}-Skripten. Die hierdurch entstehenden Vorteile wurden in Kapitel \ref{sec:vorteile} behandelt. Weitere Möglichkeiten sind
+\begin{enumerate}
+  \item Amazon Management Konsole
+  \item Software Development Kits (SDKs)
+  \item Blueprints
+\end{enumerate} \cite{wittig:awsinaction}
+
+TODO Beispielbild Terraform Skript
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/awsapi.png}
+  \caption{Interaktionsmöglichkeiten mit der AWS API \cite{wittig:awsinaction}}
+\end{figure}
+
+\section{EC2-Container Service}
+\label{sec:ecs}
 \\Da unsere Services innerhalb von Docker-Containern laufen, nutzen wir den von Amazon angebotenen EC2-Container Service (ECS). Dieser Dienst wurde speziell für die Unterstützung von Docker-Containern auf EC2-Instanzen entwickelt und erlaubt neben dem Betrieb auch die Verwaltung der Anwendungen auf einem verwalteten EC2-Instanz-Cluster. Der Betrieb einer eigenen Cluster-Managementinfrastruktur entfällt. Funktionen wie Sicherheitsgruppen, Elastic Load Balancing, EBS-Volumes und IAM-Rollen stehen daneben ebenfalls zur Verfügung \cite{aws:ecs}.
-Beide Instanzen laufen innerhalb einer Security Group, welche wiederum in einer Auto-Scaling Group liegt. Letztere ermöglicht eine elastische Instanzgruppe, deren bereitgestellte Ressourcen sich je nach Bedarf anpassen. Das Auto-Scaling basiert dabei auf CloudWatch-Metriken wie z.B. CPU-Auslastung. Beispielsweise könnte eine Metrik besagen, dass zwei neue Instanzen gestartet werden sollen, wenn die CPU Auslastung für 5 Minuten bei 60\% oder höher liegt. Es ist jedoch auch denkbar, dass die Ressourcenanpassung der Gruppe auf Amazons verteilten Queue-System SQS basiert. Dann würden sich die Ressourcen nach der Anzahl der Items in der Queue richten. \cite{vliet:resilience} \\
 
-TODO Wie funktioniert scaling bei uns?
+\section{Auto-Scaling}
+\label{sec:auto-scaling}
+Beide Instanzen laufen innerhalb einer Security Group, welche wiederum in einer Auto-Scaling Group liegt. Letztere ermöglicht eine elastische Instanzgruppe, deren bereitgestellte Ressourcen sich je nach Bedarf anpassen. Das Auto-Scaling basiert dabei auf CloudWatch-Metriken wie z.B. CPU-Auslastung. Beispielsweise könnte eine Metrik besagen, dass zwei neue Instanzen gestartet werden sollen, wenn die CPU Auslastung für 5 Minuten bei 60\% oder höher liegt. CloudWatch ist ein Service, der verschiedene Informationen der verwendeten IT-Ressourcen überwacht und misst. Von der Betrachtung einzelner Instanzen bis hin zur Überwachung aller Instanzen einer Region ist nahezu alles möglich. Es ist jedoch auch denkbar, dass die Ressourcenanpassung der Gruppe auf Amazons verteilten Queue-System SQS basiert. Dann würden sich die Ressourcen nach der Anzahl der Items in der Queue richten. \cite{vliet:resilience}, \cite{vliet:programmingec2} \\
 
-\\
+TODO Wie funktioniert scaling bei uns? metriken?
 
-TODO Target Group mit einbringen um später im ALB Bezug auf inhaltsbasiertes Routing zu nehmen
-
-\\
+\section{Load Balancing}
+\label{sec:elb}
 Der gesamten Gruppe vorgesetzt ist ein Application Load Balancer (ALB). Eine von zwei Lastenverteilungsoptionen\footnote{neben Classic Load Balancer; \\vgl. Funktionen https://aws.amazon.com/de/elasticloadbalancing/classicloadbalancer/faqs/} des Services Elastic Load Balancing.
 Der Elastic Load Balancer (ELB) sitzt vor einer Gruppe von EC2-Instanzen und kann jede Art von TCP Traffic verteilen. Bei der Kommunikation mit den Instanzen nutzt der ELB HTTP und wandelt ggf. vorher eingegangenes HTTPS in HTTP um. Dieses Vorgehen reduziert die Belastung der Instanzen und erhöht damit die Fehlertoleranz. Bei der Verteilung des Traffics achtet der ELB auf eine gleichmäßige Verteilung auf alle Availability Zonen und in jeder AZ auf die gleichmäßige Aufteilung auf die vorhandenen Instanzen. Dies eröht die Sicherheit und reduziert die Komplexität der Infrastruktur.
 \\ Wird der ELB zusammen mit einer Auto-Scaling Group betrieben, kann dieser je nach Bedarf automatisch Instanzen registrieren und bei Nicht-Gebrauch auch wieder abmelden. Eine manuelle Zuordnung der IPs zu den jeweiligen Instanzen ist damit nicht mehr nötig. Bei der Abmeldung einer bestehenden Instanz und nachfolgender Neu-Registrierung einer neuen Instanz kann es unter Umständen kurzzeitig dazu kommen, dass der Dienst nicht zur Verfügung steht. Dieses Problem ist bekannt und entsteht dadurch, dass die alte Instanz erst beendet wird, ehe die neue Instanz hochgefahren werden kann.
 Dem ELB kann ein Hostname zugeordnet werden, worüber dieser direkt angesprochen werden kann.
 \cite{vliet:resilience}, \cite{aws:elb} \\
 
-Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der eingehende Traffic auf erweiterte Anwendungsinformationen, die die Inhalte der Anfrage enthalten. Damit eignet sich dieser Typ besonders für Anwendungen mit der Notwendigkeit erweiterter Routing-Funktionen, Micro-Services und Container-basierten Architekturen. Ein ALB ermöglicht die Lastenverteilung auf mehrere Ports einer EC2-Instanz, aber auch die Umleitung auf mehrere Services. Letzteres wird durch inhaltsbasiertes Routing ermöglicht, welches Anfragen basierend auf ihrem Inhalt an den entsprechenden Service weiterleitet.\footnote{weitere Funktionen des ALBs können \cite{aws:alb} entnommen werden}\\
+\subsection{Application Load Balancer}
+\label{sec:alb}
+Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der eingehende Traffic auf erweiterte Anwendungsinformationen, die die Inhalte der Anfrage enthalten. Damit eignet sich dieser Typ besonders für Anwendungen mit der Notwendigkeit erweiterter Routing-Funktionen, Micro-Services und Container-basierten Architekturen. Ein ALB ermöglicht die Lastenverteilung auf mehrere Ports einer EC2-Instanz, aber auch die Umleitung auf mehrere Services. Letzteres wird durch Target Groups (siehe \ref{sec:target-group}) und inhaltsbasiertes Routing ermöglicht, welches Anfragen basierend auf ihrem Inhalt an den entsprechenden Service weiterleitet.\footnote{weitere Funktionen des ALBs können \cite{aws:alb} entnommen werden} \cite{aws:elb}, \cite{aws:alb} \\
 
 TODO BEispielbild inhaltsbasiertes ROuting, wenn meine Annahme stimmt
-
-\cite{aws:elb}, \cite{aws:alb}
-
-
-Instanzen werden über terraform aufgesetzt. andere möglichkeiten benennen, beispielcode zeigen.
-
-\section{Das Zusammenspiel der Dienste}
-\label{sec:spiel}
-Beispiel Cloud Comp Kap 4.1.7
 
 \begin{figure}[!ht]
   \centering
   \includegraphics[width=0.9\textwidth]{images/regions.png}
   \caption{weltweite Infrastruktur (orange: Region mit x AZs, weiß/grün: geplante Region) \cite{aws:regions}}
 \end{figure}
+
+
+
+\subsection{Target-Group}
+\label{sec:target-group}
+Eine Target Group ist eine Gruppierung von Instanzen oder Microservices innerhalb der Instanzen, damit Anfragen durch den ALB (siehe \ref{sec:alb}) gezielt an den zuständigen Dienst geroutet werden können. Hierfür wird eine Target Group als eine Regel für einen Listener des Load Balancers definiert. Jede Target Group nutzt die Standard Health Check- Einstellungen eines Load Balancers. Auf Basis dessen kann der Load Balancer ausschließlich gesunde Targets ansprechen. \cite{aws:target} \\
+
+In unserem Fallbeispiel gibt es zwei Target Groups. In beiden befinden sich beide verfügbaren Instanzen als Targets.
+
+\\ TODO Ausformulierung wie Anfragenrouting bei uns funzt
+
+
+\section{Virtual Private Cloud}
+\label{sec:vpc}
+Der im vorherigen Kapitel erwähnte ALB ist der einzige Kontakt zur Außenwelt. Dies dient zum einen der Sicherheit und zum anderen dem Pragmatismus, da nicht für jeden einzelnen virtuellen Server ein DNS Name vergeben und verwaltet werden muss. Der ALB bekommt einen eindeutigen Hostnamen, über den der ALB und damit alle dahinterliegenden Services innerhalb der definierten Security Groups erreichbar sind. Die Security Groups bieten jedoch nicht ausreichend Kontrollmöglichkeiten für das sichere Handling der Anfragen. Zum Beispiel ist es in normalen Security Groups nicht möglich, eingehende Anfragen zu beschränken. Um eingehenden und ausgehenden Datenverkehr kontrollieren zu können, bietet Amazon die Virtual Private Cloud (VPC) an. \\
+Der Einsatz der VPC ermöglicht es uns, die beiden EC2-Instanzen in einem privaten Sub-Netzwerk unterzubringen. Der ALB befindet sich im öffentlichen Netzwerk, welches von außen sichtbar ist. Anfragen gelangen per HTTPS über den Hostnamen zum ALB, wo sie umgewandelt und per HTTP an die jeweiligen Services in den EC2-Instanzen weitergeleitet werden.
+\cite{vliet:resilience}, \cite{wittig:awsinaction}, \cite{aws:vpc}
+
+\section{Simple Storage Service}
+\label{sec:s3}
+Zur dauerhaften Speicherung erhobener Daten der Nutzer verwenden wir den neben EC2 zweiten Basisdienst für Webanwendungen: Amazons Simple Storage Service (S3). Ein virtueller Objekt-Speicher zur Speicherung einer unbegrenzten Datenmenge. Amazon garantiert eine 99,99\% Haltbarkeit der Daten. Es soll nahezu unmöglich sein, dass Dateien kaputt oder verloren gehen. Amazons Chief Evangelist Jeff Barr beschreibt es so \\
+\begin{quote}
+"`If you store 10.000 objects with us, on average we may lose one of them every 10 million years or so."'
+\end{quote} \cite{vliet:programmingec2}
+
+Sichergestellt wird dies über ein Service Level Agreement. \cite{vliet:programmingec2}
+
+Zu speichernde Objekte werden in buckets vorgehalten. Diese können in jeder Region erstellt werden und eine unbegrenzte Anzahl Objekte mit Größen zwischen 1Byte und 5TB enthalten. Zur Speicherung statischer Informationen von Webseiten oder mobilen Anwendungen ist S3 weniger geeignet. Hierfür kann der Nutzer auf CloudFront ausweichen. einem Content Distribution Network, das dem Verteilen statischer, dynamischer und gestreamter Inhalte über die gesamte Welt dient.
+\cite{vliet:resilience}, \cite{aws:s3}
+
+\section{Identity Access Management}
+\label{sec:iam}
+Zur Einschränkung der Zugriffsmöglichkeiten für Nutzer auf die IT-Ressourcen in AWS und damit zur Erhöhung der Sicherheit, bietet AWS den Identity and Access Management Service (IAM). Dieser Service prüft jede Anfrage auf deren Zulässigkeit. Zugriffe können über policies Benutzer- oder Gruppenscharf organisiert werden. Die Authentifizierung der Nutzer gegenüber der Services erfolgt über die Anmeldedaten der Benutzer. IAM bietet neben der Zugriffsverwaltung auch
+\begin{itemize}
+  \item Multi Factor Authentication (MFA) als zweiten Authentifizierungsschritt für bestimmte Operationen
+  \item das Hinzufügen von Rollen zu EC2 Instanzen, wodurch die Festlegungen für die Rolle die Zugriffsmöglichkeiten auf die Instanz bestimmen
+\end{itemize}
+\cite{vliet:resilience}, \cite{wittig:awsinaction}
+
 
 
 % keep an blank line above
