@@ -12,6 +12,7 @@ Nachfolgend möchte ich anhand eines Beispiels aus dem Energiemarkt einige Diens
 TODO Schaubild
 
 \section{Virtuelle Server mit Elastic Compute Cloud}
+\label{sec:ec2}
 Jede Anwendung im Web benötigt einen Server, auf dem sie ausgeführt werden kann. Der Webservice Elastic Compute Cloud (EC2) bietet virtuelle Server und damit Rechenleistung in der Cloud, welche je nach Bedarf anpassbar sind. \cite{aws:ec2}
 Der Entwickler hat die Möglichkeit, Instanzen von Servern innerhalb weniger Minuten aufzusetzen. Dabei kann er wählen, auf welchem Betriebssystem die Instanz basieren (Windows oder Linux) und welche Ressourcenkonfiguration die bereitgestellte Instanz haben soll. \cite{aws:ec2} \\
 
@@ -33,14 +34,12 @@ Jede Instanz gehört zu einer oder mehreren Security Groups, um sie gegenüber d
 \cite{vliet:resilience}, \cite{aws:eip} \\
 
 In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert), wobei jede zwei identische Services innerhalb eines Clusters enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Jede Instanz liegt dabei in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet. \\
-Aufgesetzt werden die Instanzen über die AWS API anhand von TerraForm\footnote{https://www.terraform.io/intro/}-Skripten. Die hierdurch entstehenden Vorteile wurden in Kapitel \ref{sec:vorteile} behandelt. Weitere Möglichkeiten sind
+Aufgesetzt werden die Instanzen über die AWS API anhand von vordefinierten Konfigurationen, die über TerraForm\footnote{https://www.terraform.io/intro/}-an AWS gesendet werden. Die hierdurch entstehenden Vorteile wurden in Kapitel \ref{sec:vorteile} behandelt. Weitere Möglichkeiten sind
 \begin{enumerate}
   \item Amazon Management Konsole
   \item Software Development Kits (SDKs)
-  \item Blueprints
+  \item Command Line Interface
 \end{enumerate} \cite{wittig:awsinaction}
-
-TODO Beispielbild Terraform Skript
 
 \begin{figure}[!ht]
   \centering
@@ -56,11 +55,11 @@ TODO Beispielbild Terraform Skript
 \label{sec:auto-scaling}
 Beide Instanzen laufen innerhalb einer Security Group, welche wiederum in einer Auto-Scaling Group liegt. Letztere ermöglicht eine elastische Instanzgruppe, deren bereitgestellte Ressourcen sich je nach Bedarf anpassen. Das Auto-Scaling basiert dabei auf CloudWatch-Metriken wie z.B. CPU-Auslastung. Beispielsweise könnte eine Metrik besagen, dass zwei neue Instanzen gestartet werden sollen, wenn die CPU Auslastung für 5 Minuten bei 60\% oder höher liegt. CloudWatch ist ein Service, der verschiedene Informationen der verwendeten IT-Ressourcen überwacht und misst. Von der Betrachtung einzelner Instanzen bis hin zur Überwachung aller Instanzen einer Region ist nahezu alles möglich. Es ist jedoch auch denkbar, dass die Ressourcenanpassung der Gruppe auf Amazons verteilten Queue-System SQS basiert. Dann würden sich die Ressourcen nach der Anzahl der Items in der Queue richten. \cite{vliet:resilience}, \cite{vliet:programmingec2} \\
 
-TODO Wie funktioniert scaling bei uns? metriken?
+In unserem Projekt haben wir noch keine konkreten Metriken definiert, die für das AutoScaling herangezogen werden sollen. Allerdings würden wir uns vermutlich im ersten Schritt auf die CPU-Auslastung stützen.
 
 \section{Load Balancing}
 \label{sec:elb}
-Der gesamten Gruppe vorgesetzt ist ein Application Load Balancer (ALB). Eine von zwei Lastenverteilungsoptionen\footnote{neben Classic Load Balancer; \\vgl. Funktionen https://aws.amazon.com/de/elasticloadbalancing/classicloadbalancer/faqs/} des Services Elastic Load Balancing.
+Der gesamten Gruppe vorgesetzt ist ein Application Load Balancer (ALB), der die Instanzen vom öffentlichen Internet loslöst. Ein ALB ist eine von zwei Lastenverteilungsoptionen\footnote{neben Classic Load Balancer; \\vgl. Funktionen https://aws.amazon.com/de/elasticloadbalancing/classicloadbalancer/faqs/} des Services Elastic Load Balancing.
 Der Elastic Load Balancer (ELB) sitzt vor einer Gruppe von EC2-Instanzen und kann jede Art von TCP Traffic verteilen. Bei der Kommunikation mit den Instanzen nutzt der ELB HTTP und wandelt ggf. vorher eingegangenes HTTPS in HTTP um. Dieses Vorgehen reduziert die Belastung der Instanzen und erhöht damit die Fehlertoleranz. Bei der Verteilung des Traffics achtet der ELB auf eine gleichmäßige Verteilung auf alle Availability Zonen und in jeder AZ auf die gleichmäßige Aufteilung auf die vorhandenen Instanzen. Dies eröht die Sicherheit und reduziert die Komplexität der Infrastruktur.
 \\ Wird der ELB zusammen mit einer Auto-Scaling Group betrieben, kann dieser je nach Bedarf automatisch Instanzen registrieren und bei Nicht-Gebrauch auch wieder abmelden. Eine manuelle Zuordnung der IPs zu den jeweiligen Instanzen ist damit nicht mehr nötig. Bei der Abmeldung einer bestehenden Instanz und nachfolgender Neu-Registrierung einer neuen Instanz kann es unter Umständen kurzzeitig dazu kommen, dass der Dienst nicht zur Verfügung steht. Dieses Problem ist bekannt und entsteht dadurch, dass die alte Instanz erst beendet wird, ehe die neue Instanz hochgefahren werden kann.
 Dem ELB kann ein Hostname zugeordnet werden, worüber dieser direkt angesprochen werden kann.
@@ -68,25 +67,19 @@ Dem ELB kann ein Hostname zugeordnet werden, worüber dieser direkt angesprochen
 
 \subsection{Application Load Balancer}
 \label{sec:alb}
-Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der eingehende Traffic auf erweiterte Anwendungsinformationen, die die Inhalte der Anfrage enthalten. Damit eignet sich dieser Typ besonders für Anwendungen mit der Notwendigkeit erweiterter Routing-Funktionen, Micro-Services und Container-basierten Architekturen. Ein ALB ermöglicht die Lastenverteilung auf mehrere Ports einer EC2-Instanz, aber auch die Umleitung auf mehrere Services. Letzteres wird durch Target Groups (siehe \ref{sec:target-group}) und inhaltsbasiertes Routing ermöglicht, welches Anfragen basierend auf ihrem Inhalt an den entsprechenden Service weiterleitet.\footnote{weitere Funktionen des ALBs können \cite{aws:alb} entnommen werden} \cite{aws:elb}, \cite{aws:alb} \\
-
-TODO BEispielbild inhaltsbasiertes ROuting, wenn meine Annahme stimmt
+Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der eingehende Traffic auf erweiterte Anwendungsinformationen, die die Inhalte der Anfrage enthalten. Damit eignet sich dieser Typ besonders für Anwendungen mit der Notwendigkeit erweiterter Routing-Funktionen, Micro-Services und Container-basierten Architekturen. Ein ALB ermöglicht die Lastenverteilung auf mehrere Ports einer EC2-Instanz, aber auch die Umleitung auf mehrere Services. Letzteres wird durch Target Groups (siehe \ref{sec:target-group}) und inhaltsbasiertes Routing ermöglicht, welches Anfragen basierend auf ihrem Inhalt an den entsprechenden Service weiterleitet.\footnote{weitere Funktionen des ALBs können \cite{aws:alb} entnommen werden} \cite{aws:elb}, \cite{aws:alb}
 
 \begin{figure}[!ht]
   \centering
-  \includegraphics[width=0.9\textwidth]{images/regions.png}
-  \caption{weltweite Infrastruktur (orange: Region mit x AZs, weiß/grün: geplante Region) \cite{aws:regions}}
+  \includegraphics[width=0.9\textwidth]{images/routing.png}
+  \caption{Listener-Regeln des ALB für inhaltsbasiertes Routing}
 \end{figure}
-
-
 
 \subsection{Target-Group}
 \label{sec:target-group}
 Eine Target Group ist eine Gruppierung von Instanzen oder Microservices innerhalb der Instanzen, damit Anfragen durch den ALB (siehe \ref{sec:alb}) gezielt an den zuständigen Dienst geroutet werden können. Hierfür wird eine Target Group als eine Regel für einen Listener des Load Balancers definiert. Jede Target Group nutzt die Standard Health Check- Einstellungen eines Load Balancers. Auf Basis dessen kann der Load Balancer ausschließlich gesunde Targets ansprechen. \cite{aws:target} \\
 
-In unserem Fallbeispiel gibt es zwei Target Groups. In beiden befinden sich beide verfügbaren Instanzen als Targets.
-
-\\ TODO Ausformulierung wie Anfragenrouting bei uns funzt
+In unserem Fallbeispiel gibt es zwei Target Groups. In beiden befinden sich beide verfügbaren Instanzen als Targets. Wie bereits in Kapitel \ref{sec:ec2} beschrieben, befinden sich in jeder Instanz jeweils zwei Services, weshalb die eigentliche Logik der Target Groups bei uns (noch) nicht korrekt greift. Richtiger wäre eine Target Group für alle Backend-Services und eine Target Group für alle Frontend-Services. Je nach Auslastung würde dann der eine über den anderen Service innerhalb der Target Group bevorzugt angesprochen. Unser Aufbau ist derzeit noch der Tatsache geschuldet, dass wir lediglich zwei Instanzen innerhalb unseres Clusters haben und der Scheduler die Container für einen Service bestmöglich gleichmäßig darauf verteilt.
 
 
 \section{Virtual Private Cloud}
@@ -99,7 +92,7 @@ Der Einsatz der VPC ermöglicht es uns, die beiden EC2-Instanzen in einem privat
 \label{sec:s3}
 Zur dauerhaften Speicherung erhobener Daten der Nutzer verwenden wir den neben EC2 zweiten Basisdienst für Webanwendungen: Amazons Simple Storage Service (S3). Ein virtueller Objekt-Speicher zur Speicherung einer unbegrenzten Datenmenge. Amazon garantiert eine 99,99\% Haltbarkeit der Daten. Es soll nahezu unmöglich sein, dass Dateien kaputt oder verloren gehen. Amazons Chief Evangelist Jeff Barr beschreibt es so \\
 \begin{quote}
-"`If you store 10.000 objects with us, on average we may lose one of them every 10 million years or so."'
+\"`If you store 10.000 objects with us, on average we may lose one of them every 10 million years or so.\"'
 \end{quote} \cite{vliet:programmingec2}
 
 Sichergestellt wird dies über ein Service Level Agreement. \cite{vliet:programmingec2}
