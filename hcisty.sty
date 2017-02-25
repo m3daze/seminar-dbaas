@@ -173,12 +173,11 @@ Hamburg, \today
 
 	\newpage\ifpdf\pdfbookmark[1]{Table of Contents}{label:toc}\fi \tableofcontents
 	\newpage\ifpdf\pdfbookmark[1]{List of Figures}{label:lof}\fi     \listoffigures
-	\newpage\ifpdf\pdfbookmark[1]{List of Tables}{label:lot}\fi       \listoftables
+	% \newpage\ifpdf\pdfbookmark[1]{List of Tables}{label:lot}\fi       \listoftables
 
 	{\doublespacing
 	\newpage\pagenumbering{arabic}
 	}
-
 
 }
 \headsep.5cm
@@ -192,7 +191,11 @@ Hamburg, \today
 
 %% beginning
 \newcommand{\finish}{
-	% Bibliography and Glossary          (\phantomsection is needed for hyperlinks)
+  \newpage\phantomsection%
+  \addcontentsline{toc}{chapter}{Fazit}
+  \ifpdf\pdfbookmark[1]{Fazit}{label:fazit}\fi \input{fazit.tex}
+
+  % Bibliography and Glossary          (\phantomsection is needed for hyperlinks)
 
 	\newpage\phantomsection%
 	\addcontentsline{toc}{chapter}{\bibname}              % add Bibliography to TOC
@@ -206,9 +209,8 @@ Hamburg, \today
 	%\newpage\phantomsection%
 	%\addcontentsline{toc}{chapter}{Glossary}                  % add Glossary to TOC
 	%\printglossary
-	\newpage
-	\input{bibliothek.tex}
-	\newpage\input{erklaerung.tex}
+	%\newpage\input{bibliothek.tex}
+	%\newpage\input{erklaerung.tex}
 	\end{document}
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -3,13 +3,17 @@ Nachfolgend möchte ich anhand eines Beispiels aus dem Energiemarkt einige Diens
 
 \section{Das Fallbeispiel}
 \label{sec:fallbeispiel}
-\\ Bei LichtBlick, Deutschlands größtem unabhängigen Ökostromanbieter, arbeitet aktuell ein Team an einer neuen Plattform-Idee. Grundsätzlich soll es möglich sein, dass sich Personen gegenseitig ihren selbst erzeugten Ökostrom verkaufen, ohne dass ein Stromhändler dazwischen hängt. Ähnliche Produkte gibt es bereits auf dem niederländischen und dem australischen Markt, jedoch noch nicht in Deutschland. Grund hierfür sind diverse Regularien, die es Besitzern von Wind-, Wasserkraft-, Photovoltaik- und Kraft-Wärme-Kopplungs-Anlagen erschweren, ihren Strom direkt zum Verkauf an andere Personen anzubieten. Da die Entwicklung in diesem Bereich noch recht unklar ist, dennoch erste Ideen auf dem deutschen Markt vertestet werden wollen, entscheidet sich das Team für eine agile und schlanke Herangehensweise. Daher fiel die Wahl bei der Frage nach der erforderlichen IT-Infrastruktur auf Amazon Web Services.
+Bei LichtBlick, Deutschlands größtem unabhängigen Ökostromanbieter, arbeitet aktuell ein Team an einer neuen Plattform-Idee. Grundsätzlich soll es möglich sein, dass sich Personen gegenseitig ihren selbst erzeugten Ökostrom verkaufen, ohne dass ein Stromhändler dazwischen hängt. Ähnliche Produkte gibt es bereits auf dem niederländischen und dem australischen Markt, jedoch noch nicht in Deutschland. Grund hierfür sind diverse Regularien, die es Besitzern von Wind-, Wasserkraft-, Photovoltaik- und Kraft-Wärme-Kopplungs-Anlagen erschweren, ihren Strom direkt zum Verkauf an andere Personen anzubieten. Da die Entwicklung in diesem Bereich noch recht unklar ist, dennoch erste Ideen auf dem deutschen Markt vertestet werden wollen, entscheidet sich das Team für eine agile und schlanke Herangehensweise. Daher fiel die Wahl bei der Frage nach der erforderlichen IT-Infrastruktur auf Amazon Web Services.
 
-
+\pagebreak
 \section{IT-Infrastruktur}
 \label{sec:infrastruktur}
 
-TODO Schaubild
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/peero.png}
+  \caption{Infrastruktur für Sharing Energy Plattform }
+\end{figure}
 
 \section{Virtuelle Server mit Elastic Compute Cloud}
 \label{sec:ec2}
@@ -22,18 +26,19 @@ Die Ressourcenkonfiguration kann sich aufgrund der Leistungsfähigkeit des Proze
 
 Darüberhinaus kann der Nutzer entscheiden, innerhalb welcher Availability Zone die Instanz bereitgestellt wird und ob die Instanzen zusätzlich mit Speicherplatz versehen werden sollen. Dabei hat er die Wahl zwischen zwei Varianten.
 \begin{enumerate}
-  \item S3-gesichert
-  \\ Diese Instanztypen können nur neugestartet oder gelöscht werden, da sie einem flüchtigen Speicher entsprechen. Das root device ist Teil der Instanz selbst.
-  \item EBS-gesichert
-  \\ Dieser Typ wird bevorzugt ausgewählt, da Instanzen auch gestoppt und gestartet werden können. Dies wird möglich, da sich die root/boot disk auf einem separaten Elastic Block Store Volume (EBS) befindet, welches unabhängig der Instanz besteht.
+  \item S3-gesichert \\
+  Diese Instanztypen können nur neugestartet oder gelöscht werden, da sie einem flüchtigen Speicher entsprechen. Das root device ist Teil der Instanz selbst.
+  \item EBS-gesichert \\
+  Dieser Typ wird bevorzugt ausgewählt, da Instanzen auch gestoppt und gestartet werden können. Dies wird möglich, da sich die root/boot disk auf einem separaten Elastic Block Store Volume (EBS) befindet, welches unabhängig der Instanz besteht.
 \end{enumerate}
 \cite{vliet:resilience}, \cite{aws:ec2} \\
 
-Jede Instanz gehört zu einer oder mehreren Security Groups, um sie gegenüber der Außenwelt abzuschirmen. Angesprochen werden die Instanzen über freigegebene Ports oder IP-Masken.
-\\ Weiterhin erhalten Instanzen eine öffentliche IP, die sich jedoch mit jeder Bereitstellung der Instanz (z.B. Neustart) ändert. Daher bietet Amazon die Möglichkeit, die öffentliche IPv4-Adresse\footnote{IPv6-Adressen werden derzeit nicht unterstützt} durch eine Elastic IP Adresse auszutauschen. Elastic IP bietet den Vorteil, dass sie konstant bestehen bleibt. Sollte eine Instanz ausfallen, kann die Elastic IP Adresse sehr schnell einer gesunden Instanz zugewiesen werden.
+Die Instanzen werden in einer virtual private cloud (siehe \ref{sec:vpc}) bereitgestellt. Einem logisch isoliertem Netzwerk, welches verschiedene Netzwerk-Sicherheitsmechanismen mitbringt. Zum Beispiel gehört jede Instanz zu einer oder mehreren Security Groups, um sie gegenüber der Außenwelt abzuschirmen. Angesprochen werden die Instanzen über freigegebene Ports oder IP-Masken. \\
+Weiterhin erhalten Instanzen eine öffentliche IP, die sich jedoch mit jeder Bereitstellung der Instanz (z.B. Neustart) ändert. Daher bietet Amazon die Möglichkeit, die öffentliche IPv4-Adresse\footnote{IPv6-Adressen werden derzeit nicht unterstützt} durch eine Elastic IP Adresse auszutauschen. Elastic IP bietet den Vorteil, dass sie konstant bestehen bleibt. Sollte eine Instanz ausfallen, kann die Elastic IP Adresse sehr schnell einer gesunden Instanz zugewiesen werden.
 \cite{vliet:resilience}, \cite{aws:eip} \\
 
-In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert), wobei jede zwei identische Services innerhalb eines Clusters enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Jede Instanz liegt dabei in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet. \\
+In unserem Beispiel verwenden wir aus Gründen der Ausfallsicherheit zwei EC2-Instanzen (Typ: EBS-gesichert) innerhalb eines Clusters, wobei jede zwei identische Services enthält. Den Backend- und den Frontend-Service (siehe \ref{sec:infrastruktur}). Die CLusterung dient der logischen Gruppierung der Instanzen, um geeignete Zugriffsparameter setzen zu können. \\
+Jede Instanz liegt in einer anderen Availability Zone in der Region Frankfurt am Main (eu-central-1) und kann auf 4GB Arbeitsspeicher zurückgreifen (Typ: t2.medium). Unterliegend wird ein Linux Image verwendet. \\
 Aufgesetzt werden die Instanzen über die AWS API anhand von vordefinierten Konfigurationen, die über TerraForm\footnote{https://www.terraform.io/intro/}-an AWS gesendet werden. Die hierdurch entstehenden Vorteile wurden in Kapitel \ref{sec:vorteile} behandelt. Weitere Möglichkeiten sind
 \begin{enumerate}
   \item Amazon Management Konsole
@@ -49,7 +54,7 @@ Aufgesetzt werden die Instanzen über die AWS API anhand von vordefinierten Konf
 
 \section{EC2-Container Service}
 \label{sec:ecs}
-\\Da unsere Services innerhalb von Docker-Containern laufen, nutzen wir den von Amazon angebotenen EC2-Container Service (ECS). Dieser Dienst wurde speziell für die Unterstützung von Docker-Containern auf EC2-Instanzen entwickelt und erlaubt neben dem Betrieb auch die Verwaltung der Anwendungen auf einem verwalteten EC2-Instanz-Cluster. Der Betrieb einer eigenen Cluster-Managementinfrastruktur entfällt. Funktionen wie Sicherheitsgruppen, Elastic Load Balancing, EBS-Volumes und IAM-Rollen stehen daneben ebenfalls zur Verfügung \cite{aws:ecs}.
+Da unsere Services innerhalb von Docker-Containern laufen, nutzen wir den von Amazon angebotenen EC2-Container Service (ECS). Dieser Dienst wurde speziell für die Unterstützung von Docker-Containern auf EC2-Instanzen entwickelt und erlaubt neben dem Betrieb auch die Verwaltung der Anwendungen auf einem verwalteten EC2-Instanz-Cluster. Der Betrieb einer eigenen Cluster-Managementinfrastruktur entfällt. Funktionen wie Sicherheitsgruppen, Elastic Load Balancing, EBS-Volumes und IAM-Rollen stehen daneben ebenfalls zur Verfügung \cite{aws:ecs}.
 
 \section{Auto-Scaling}
 \label{sec:auto-scaling}
@@ -60,8 +65,8 @@ In unserem Projekt haben wir noch keine konkreten Metriken definiert, die für d
 \section{Load Balancing}
 \label{sec:elb}
 Der gesamten Gruppe vorgesetzt ist ein Application Load Balancer (ALB), der die Instanzen vom öffentlichen Internet loslöst. Ein ALB ist eine von zwei Lastenverteilungsoptionen\footnote{neben Classic Load Balancer; \\vgl. Funktionen https://aws.amazon.com/de/elasticloadbalancing/classicloadbalancer/faqs/} des Services Elastic Load Balancing.
-Der Elastic Load Balancer (ELB) sitzt vor einer Gruppe von EC2-Instanzen und kann jede Art von TCP Traffic verteilen. Bei der Kommunikation mit den Instanzen nutzt der ELB HTTP und wandelt ggf. vorher eingegangenes HTTPS in HTTP um. Dieses Vorgehen reduziert die Belastung der Instanzen und erhöht damit die Fehlertoleranz. Bei der Verteilung des Traffics achtet der ELB auf eine gleichmäßige Verteilung auf alle Availability Zonen und in jeder AZ auf die gleichmäßige Aufteilung auf die vorhandenen Instanzen. Dies eröht die Sicherheit und reduziert die Komplexität der Infrastruktur.
-\\ Wird der ELB zusammen mit einer Auto-Scaling Group betrieben, kann dieser je nach Bedarf automatisch Instanzen registrieren und bei Nicht-Gebrauch auch wieder abmelden. Eine manuelle Zuordnung der IPs zu den jeweiligen Instanzen ist damit nicht mehr nötig. Bei der Abmeldung einer bestehenden Instanz und nachfolgender Neu-Registrierung einer neuen Instanz kann es unter Umständen kurzzeitig dazu kommen, dass der Dienst nicht zur Verfügung steht. Dieses Problem ist bekannt und entsteht dadurch, dass die alte Instanz erst beendet wird, ehe die neue Instanz hochgefahren werden kann.
+Der Elastic Load Balancer (ELB) sitzt vor einer Gruppe von EC2-Instanzen und kann jede Art von TCP Traffic verteilen. Bei der Kommunikation mit den Instanzen nutzt der ELB HTTP und wandelt ggf. vorher eingegangenes HTTPS in HTTP um. Dieses Vorgehen reduziert die Belastung der Instanzen und erhöht damit die Fehlertoleranz. Bei der Verteilung des Traffics achtet der ELB auf eine gleichmäßige Verteilung auf alle Availability Zonen und in jeder AZ auf die gleichmäßige Aufteilung auf die vorhandenen Instanzen. Dies eröht die Sicherheit und reduziert die Komplexität der Infrastruktur. \\
+Wird der ELB zusammen mit einer Auto-Scaling Group betrieben, kann dieser je nach Bedarf automatisch Instanzen registrieren und bei Nicht-Gebrauch auch wieder abmelden. Eine manuelle Zuordnung der IPs zu den jeweiligen Instanzen ist damit nicht mehr nötig. Bei der Abmeldung einer bestehenden Instanz und nachfolgender Neu-Registrierung einer neuen Instanz kann es unter Umständen kurzzeitig dazu kommen, dass der Dienst nicht zur Verfügung steht. Dieses Problem ist bekannt und entsteht dadurch, dass die alte Instanz erst beendet wird, ehe die neue Instanz hochgefahren werden kann.
 Dem ELB kann ein Hostname zugeordnet werden, worüber dieser direkt angesprochen werden kann.
 \cite{vliet:resilience}, \cite{aws:elb} \\
 
@@ -72,7 +77,7 @@ Bei dem zuvor erwähnten ALB, welchen wir im Einsatz haben, verteilt sich der ei
 \begin{figure}[!ht]
   \centering
   \includegraphics[width=0.9\textwidth]{images/routing.png}
-  \caption{Listener-Regeln des ALB für inhaltsbasiertes Routing}
+  \caption{Screenshot aus AWS-Entwicklerkonsole mit Listener-Regeln des ALB für inhaltsbasiertes Routing}
 \end{figure}
 
 \subsection{Target-Group}
@@ -90,9 +95,9 @@ Der Einsatz der VPC ermöglicht es uns, die beiden EC2-Instanzen in einem privat
 
 \section{Simple Storage Service}
 \label{sec:s3}
-Zur dauerhaften Speicherung erhobener Daten der Nutzer verwenden wir den neben EC2 zweiten Basisdienst für Webanwendungen: Amazons Simple Storage Service (S3). Ein virtueller Objekt-Speicher zur Speicherung einer unbegrenzten Datenmenge. Amazon garantiert eine 99,99\% Haltbarkeit der Daten. Es soll nahezu unmöglich sein, dass Dateien kaputt oder verloren gehen. Amazons Chief Evangelist Jeff Barr beschreibt es so \\
+Zur dauerhaften Speicherung erhobener Daten der Nutzer verwenden wir den neben EC2 zweiten Basisdienst für Webanwendungen: Amazons Simple Storage Service (S3). Ein virtueller Objekt-Speicher zur Speicherung einer unbegrenzten Datenmenge. Amazon proklamiert eine 99,999999999\% Haltbarkeit und 99,99\% Verfügbarkeit der Daten. Es soll nahezu unmöglich sein, dass Dateien kaputt oder verloren gehen. Amazons Chief Evangelist Jeff Barr beschreibt es so \\
 \begin{quote}
-\"`If you store 10.000 objects with us, on average we may lose one of them every 10 million years or so.\"'
+"`If you store 10.000 objects with us, on average we may lose one of them every 10 million years or so."'
 \end{quote} \cite{vliet:programmingec2}
 
 Sichergestellt wird dies über ein Service Level Agreement. \cite{vliet:programmingec2}
@@ -108,7 +113,5 @@ Zur Einschränkung der Zugriffsmöglichkeiten für Nutzer auf die IT-Ressourcen 
   \item das Hinzufügen von Rollen zu EC2 Instanzen, wodurch die Festlegungen für die Rolle die Zugriffsmöglichkeiten auf die Instanz bestimmen
 \end{itemize}
 \cite{vliet:resilience}, \cite{wittig:awsinaction}
-
-
 
 % keep an blank line above
