@@ -1,4 +1,5 @@
-\chapter{Amazon Web Services}\label{chapter:kapitellabel} %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Amazon Web Services}
+\label{chapter:awsgen} %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Amazon Web Services (AWS) gehört zum amerikanischen Online-Versandhändler Amazon und beschreibt die
 seit 2006 entwickelten Infrastrukturdienstleistungen, welche für andere Unternehmen in einer öffentlichen Cloud angeboten
 werden \cite{aws:general}. Ihren Ursprung haben die Dienste in den Versuchen Amazons, Kosten einzusparen. Als Online-Versandhändler unterliegt das Unternehmen einem dynamischen
@@ -18,40 +19,38 @@ AWS ist eine öffentliche Cloud (weitere Cloudtypen vgl. \cite{wittig:awsinactio
   \item Platform as a Service (PaaS)
   \\AWS bietet beispielsweise über Elastic Beanstalk eine Plattform, über welche kundenspezifische Anwendungen in der Cloud bereitgestellt werden können.
   \item Software as a Service (SaaS)
-  \\SaaS kombiniert die vorhandene Infrastruktur mit der verfügbaren Software in der Cloud. Dies bietet AWS zum Beispiel mit dem Dienst Workspaces, welcher es ermöglicht, über seinen Desktop in der Cloud zu verfügen.
+  \\SaaS kombiniert die vorhandene Infrastruktur mit der verfügbaren Software in der Cloud. Dies bietet AWS zum Beispiel mit dem Dienst Workspaces, welcher es ermöglicht, über einen virtuellen Desktop in der Cloud zu verfügen.
   \item Humans as a Service (HuaaS)
   \\ Hierbei geht es um Dienste, bei denen der Mensch als Ressource ins Spiel kommt, da dieser der Maschine in einigen Bereichen deutlich überlegen ist. Zum Beispiel in Übersetzungs- oder Design-Aufgaben. Bei Amazon Mechanical Turk übernimmt eine Gruppe von Menschen Aufgaben unterschiedlicher Größe und Komplexität und erhält dafür je Kopf eine entsprechende Entlohnung. Damit entspricht der Dienst einem Marktplatz für CrowdSourcing-Angebote.
 \end{enumerate} \cite{wittig:awsinaction}, \cite{baun:cloudcomp}
 
-Amazon dominiert den Markt im Bereich SaaS deutlich (45\% Marktanteil), was sich auch in den Umsatzzahlen zeigt. Im dritten Quartal 2016 konnte AWS ein Umsatzplus von 55\% auf 3,2 Milliaren US-Dollar für sich verbuchen. Das macht etwa 10\% des Gesamtumsatzes von Amazon aus. \cite{t3n:brien}
+Amazon dominiert den Markt im Bereich SaaS deutlich (45\% Marktanteil), was sich auch in den Umsatzzahlen zeigt. Im dritten Quartal 2016 konnte AWS ein Umsatzplus von 55\% auf 3,2 Milliarden US-Dollar für sich verbuchen. Das macht etwa 10\% des Gesamtumsatzes von Amazon aus. \cite{t3n:brien}
 
 Die, über AWS, bereitgestellten Dienste können grob in nachfolgende Gruppen unterteilt werden. Dabei beschränkt sich die Liste auf die wesentlichen der aktuell 70 verfügbaren Dienste \cite{sendcheckit:plain}, \cite{aws:insider}.
 
-{\color{red}ORIENTIEREN AN SERVICE-LISTE AWS}
-%https://aws.amazon.com/products/?hp=tile&so-exp=below
-
 \begin{itemize}
-  \item Berechnungs-Dienste
-  \\ Beinhaltet die Bereitstellung von Rechenleistung und Speicherplatz z.B. Virtuelle Server.
-  \item Applikations-Dienste
-  \\ Diese Dienste bieten Lösungen für allgemeine Anwendungsfälle z.B. Queueing oder das Durchsuchen großer Datenmengen.
+  \item Berechnungs-Dienste \\
+  Beinhaltet die Bereitstellung von Rechenleistung und Speicherplatz z.B. Virtuelle Server.
+  \item Speicher \\
+  Hierbei wird das Sammeln, Persistieren und Archivieren von Daten betrachtet.
+  \item Datenbank-Speicher \\
+  Die genannten Dienste bieten gegenüber der "`einfachen"' Speicheroption einige Vorteile, wenn es ums Managen strukturierter Daten geht. Es werden relationale und NoSQL-Systeme untersützt.
+  \item Migrations-Dienste \\
+  Diese Dienste unterstützen den Anwender zum Beispiel bei der Migration seiner Daten und Datenbanken in die AWS Cloud.
+  \item Netzwerk und Content-Delivery \\
+  Die Gruppe Netzwerk und Content Delivery beinhaltet Dienste, die es zum Beispiel ermöglichen private Netzwerke zu definieren, ein Domain Name System (DNS) für seine Anwendung einzurichten oder einen Load Balancer zu konfigurieren.
+  \item Entwicklungs- und Administrations-Dienste \\
+  Diese Dienste basieren auf den bereits oben genannten Diensten und sind hilfreich bei Themen wie Zugangsberechtigungen vergeben und einrichten, virtuelle Server monitoren und dem Bereitstellen von Anwendungen.
+  \item Kommunikations-Dienste
+  \\ Diese Dienste bieten Lösungen für z.B. Queueing oder das Senden und Empfangen von E-Mails und Push-Notifications.
   \item Dienste für das Unternehmen
-  \\ Hiermit sind unahängige Dienste wie z.B. Mail Server oder Directory Services gemeint.
-  \item Entwicklungs- und Administrations-Dienste
-  \\ Diese Dienste basieren auf den bereits oben genannten Diensten und sind hilfreich bei Themen wie Zugangsberechtigungen vergeben und einrichten, virtuelle Server monitoren und dem Bereitstellen von Anwendungen.
-  \item Speicher
-  \\ Hierbei wird das Sammeln, Persistieren und Archivieren von Daten betrachtet.
-  \item Datenbank-Speicher
-  \\ Die genannten Dienste bieten gegenüber der "´einfachen"' Speicheroption einige Vorteile, wenn es ums Managen strukturierter Daten geht. Es werden relationale und NoSQL-Systeme untersützt.
-  \item Netzwerk
-  \\ Die letzte Gruppe Netzwerk beinhaltet Dienste, die es zum Beispiel ermöglichen private Netzwerke zu definieren oder ein Domain Name System (DNS) für seine Anwendung einzurichten.
-\end{itemize} \cite{wittig:awsinaction}
+  \\ Hiermit sind unahängige Dienste gemeint, die z.B. Videokonferenzen und das unternehmensweite Speichern und Teilen von Daten ermöglichen.
+\end{itemize} \cite{wittig:awsinaction}, \cite{aws:products}
 
 Amazon betreibt und verwaltet
 die über ein Netzwerk miteinander verbundene Hardware, welche für die korrekte
 Funktion der Anwendungsservices benötigt wird, sowie die benötigten Ressourcen,
-welche über eine Webanwendung bereitgestellt und genutzt werden. Mit seinem Angebot
-zählt AWS zu den bedeutendsten internationalen Angeboten im Cloud Computing.
+welche über eine Webanwendung bereitgestellt und genutzt werden. Mit seinem Angebot zählt AWS zu den bedeutendsten internationalen Angeboten im Cloud Computing.
 
 
 \section{Regionen und Availability Zones}
@@ -64,7 +63,7 @@ AWS verfügt derzeit über 42 Availability Zones (Verfügbarkeitszonen) in 16 ge
   \caption{weltweite Infrastruktur (orange: Region mit x AZs, weiß/grün: geplante Region) \cite{aws:regions}}
 \end{figure}
 
-Eine Region entspricht einem physischen Ort auf der Welt, welcher mehrere Availability Zones (AZs) beherbergen kann. Bei einer AZ handelt es sich um ein oder mehrere unabhängige Rechenzentren, wobei jedes eine redundante Energieversorung, Netzwerk und Konnektivität besitzt.
+Eine Region entspricht einem physischen Ort auf der Welt, welcher mehrere Availability Zones (AZs) beherbergen kann. Bei einer AZ handelt es sich um ein oder mehrere unabhängige Rechenzentren, wobei jedes eine redundante Energieversorgung, Netzwerk und Konnektivität besitzt.
 
 \begin{figure}[!ht]
   \centering
@@ -94,9 +93,9 @@ Warum ein Einsatz der Amazon Web Services für Unternehmen jeder Größe sinnvol
   \item Arbeitserleichterung
   \\ Auf Wunsch übernimmt AWS mit seinem enormen Dienstangebot notwendige Arbeiten der Nutzer, die sie sonst in Eigenregie erledigen bzw. verwalten müssten. Zum Beispiel Load Balancing zwischen den Servern oder das Aufsetzen eines E-Mail-Service.
   \item Automatisierung
-  \\ Viele Dinge, die einen gewissen manuellen Aufwand und ab einer gewissen Komplexität auch eine kognitive Herausforderung bedeuten, können über Skripte automatisiert werden. Via Code können Instanzen aufgesetzt oder Container und Datenbanken bereitgestellt werden. Um Abhängigkeiten muss sich der Anwender dabei nicht sorgen, denn das übernimmt der Computer ganz automatisch. Die Infrastruktur kann beliebig flexibel definiert werden ohne dass manuelle Einstellungen auf der AWS Webseite getätigt werden müssen. Und das Beste daran ist, dass diese Skripte über ein Versionierungs-Tool versioniert werden können und im Fall eines Komplettabsturzes des Systems selbiges in sehr kurzer Zeit neu aufgesetzt werden kann. {\color{red}Vergleich Infrastructure as Code}
+  \\ Viele Dinge, die einen gewissen manuellen Aufwand und ab einer gewissen Komplexität auch eine kognitive Herausforderung bedeuten, können über Skripte automatisiert werden. Via Code können Instanzen aufgesetzt oder Container und Datenbanken bereitgestellt werden. Um Abhängigkeiten muss sich der Anwender dabei nicht sorgen, denn das übernimmt der Computer ganz automatisch. Die Infrastruktur kann beliebig flexibel definiert werden ohne dass manuelle Einstellungen auf der AWS Webseite getätigt werden müssen. Und das Beste daran ist, dass diese Skripte über ein Versionierungs-Tool versioniert werden können und im Fall eines Komplettabsturzes des Systems selbiges in sehr kurzer Zeit neu aufgesetzt werden kann. \footnote{vgl. Infrastructure as Code \cite{wittig:awsinaction}}
   \item Skalierbarkeit
-  \\ Neben den Kosten ist Skalierbarkeit wohl das stärkste Argument für eine IT-Infrastruktur in der Cloud. Im Gegensatz zur "`klassischen"' IT, bei der weit in die Zukunft geplant werden und zukünftige Zugriffszahlen abgeschätzt werden mussten, können bei AWS Ressourcen innerhalb von Minuten hinzugeschaltet werden. Sollte der Ansturm vorbei sein und Ressourcen nicht mehr benötigt werden, können diese ebenso schnell wieder abgeschaltet werden, Das ist agil, umweltfreundlich und spart auch noch Geld. Nicht nur zum Auffangen schwankender Zugriffszahlen, auch für das schnelle Bereitstellen von Testsystemen stellt eine hohe Skalierbarkeit der IT-Ressourcen einen großen (Geschwindigkeits-)Vorteil dar.
+  \\ Neben den Kosten ist Skalierbarkeit wohl das stärkste Argument für eine IT-Infrastruktur in der Cloud. Im Gegensatz zur "`klassischen"' IT, bei der weit in die Zukunft geplant werden und zukünftige Zugriffszahlen abgeschätzt werden müssen, können bei AWS Ressourcen innerhalb von Minuten hinzugeschaltet werden. Sollte der Ansturm vorbei sein und Ressourcen nicht mehr benötigt werden, können diese ebenso schnell wieder abgeschaltet werden. Das ist agil, umweltfreundlich und spart auch noch Geld. Nicht nur zum Auffangen schwankender Zugriffszahlen, auch für das schnelle Bereitstellen von Testsystemen stellt eine hohe Skalierbarkeit der IT-Ressourcen einen großen (Geschwindigkeits-)Vorteil dar.
   \item Ausfallsicherheit
   \\ Die meisten angebotenen Dienste implizieren bereits eine Ausfallsicherheit, so dass sich der Anwender um dieses Problem auch nicht mehr kümmern muss.
   \item Schnelle Anpassungsfähigkeit
@@ -109,7 +108,7 @@ Warum ein Einsatz der Amazon Web Services für Unternehmen jeder Größe sinnvol
     \caption{Preis-Reduktions-Philosophy \cite{aws:insider}}
   \end{figure}
   \item Professionalität
-  \\ AWS setzt verschiedene Standards ein, um z.B. Zahlungssicherheit und Datensicherheit zu gewährleisten. Für weitere Informationen zu eingesetzten Standards siehe Kapitel 1.3.9 \cite{wittig:awsinaction})
+  \\ AWS setzt verschiedene Standards ein, um z.B. Zahlungssicherheit und Datensicherheit zu gewährleisten. \footnote{weitere Informationen zu eingesetzten Standards siehe Kapitel 1.3.9 \cite{wittig:awsinaction}}
 \end{enumerate} \cite{aws:insider}, \cite{wittig:awsinaction}, \cite{vliet:programmingec2}
 
 
